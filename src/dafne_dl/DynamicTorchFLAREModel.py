@@ -16,10 +16,10 @@ from .interfaces import DeepLearningClass
 class DynamicTorchFLAREModel(DynamicTorchModel):
     def __init__(self, model_id,  # a unique ID to avoid mixing different models
                  init_model_function,  # inits the model. Accepts no parameters and returns the model
-                 data_preprocess_function,  # function that preprocesses the data
-                 data_postprocess_function,  # function that postprocesses the data
-                 label_preprocess_function,  # function that preprocesses the labels for training
                  apply_model_function,  # function that applies the model. Has the object, and image
+                 data_preprocess_function = None,  # function that preprocesses the data
+                 data_postprocess_function = None,  # function that postprocesses the data
+                 label_preprocess_function = None,  # function that preprocesses the labels for training
                  weights_to_model_function = default_torch_weights_to_model_function,  # put model weights inside the model.
                  model_to_weights_function = default_torch_model_to_weights_function,  # get the weights from the model in a pickable format
                  calc_delta_function = default_torch_delta_function,  # calculate the weight delta
