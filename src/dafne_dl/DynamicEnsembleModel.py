@@ -207,7 +207,7 @@ class DynamicEnsembleModel(DeepLearningClass):
     def factor_multiply(self, factor: float):
         return self.factor_multiply_function(self, factor)
     
-    def incremental_learn(self, trainingData, trainingOutputs, bs=1, minTrainImages=5):
+    def incremental_learn(self, trainingData, trainingOutputs, bs=1, minTrainImages=10):
         self.incremental_learn_function(self, trainingData, trainingOutputs, bs, minTrainImages)
         
     def dump(self, file):

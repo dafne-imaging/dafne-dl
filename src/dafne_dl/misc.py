@@ -23,6 +23,13 @@ import re
 
 import numpy as np
 
+def get_model_detail(model_detail_dict, classification, property, default=None):
+    try:
+        return model_detail_dict[classification.split(',')[0].strip()][property]
+    except KeyError:
+        return default
+
+
 
 def calculate_file_hash(file_path, cache_results=False, force_rewrite_cache=False):
     if not cache_results:
@@ -63,6 +70,24 @@ def calc_dice_score(y_true, y_pred):
     intersect = np.sum(y_true * y_pred)  # works because all multiplied by 0 gets 0
     denominator = np.sum(y_true) + np.sum(y_pred)  # works because all multiplied by 0 gets 0
     return (2 * intersect) / (denominator + 1e-6)
+
+def calc_dice_score_3D(y_true, y_pred):
+    """ 
+    Ignore background Dice calculation.
+    """
+    epsilon=1e-6
+
+    label = np.max(y_true)  # single label
+    if label == 0:
+        return -1.0  
+    
+    y_true_bin = (y_true == label).astype(np.float32)
+    y_pred_bin = (y_pred == label).astype(np.float32)
+
+    intersection = np.sum(y_true_bin * y_pred_bin)
+    sum_union = np.sum(y_true_bin) + np.sum(y_pred_bin)
+
+    return (2 * intersection) / (sum_union + epsilon)
 
 
 def fn_to_source(function):
