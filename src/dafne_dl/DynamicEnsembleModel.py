@@ -54,13 +54,20 @@ def default_ensemble_delta_function(lhs, rhs, threshold=None):
     from dafne_dl.misc import torch_state_to
     if lhs.model_id != rhs.model_id: raise IncompatibleModelError
     lhs_weights = lhs.get_weights()
-    rhs_weights = torch_state_to(rhs.get_weights(), lhs.device)
-    new_weights = OrderedDict()
-    for key, value in lhs_weights.items():
-        delta = lhs_weights[key] - rhs_weights[key]
-        if threshold is not None:
-            delta[torch.abs(delta) < threshold] = 0
-        new_weights[key] = delta
+    rhs_weights_pre = rhs.get_weights()
+    rhs_weights=[]
+    for ii in range(len(rhs.model)):
+        rhs_weights_ = torch_state_to(rhs.get_weights(), lhs.device)
+        rhs_weights.append(rhs_weights_)
+    new_weights=[]
+    for ii in range(len(lhs.model)):
+        new_weights_ = OrderedDict()
+        for key, value in lhs_weights[ii].items():
+            delta = lhs_weights[ii][key] - rhs_weights[ii][key]
+            if threshold is not None:
+                delta[torch.abs(delta) < threshold] = 0
+            new_weights_[key] = delta
+        new_weights.append(new_weights_)
     outputObj = lhs.get_empty_copy()
     outputObj.set_weights(new_weights)
     outputObj.is_delta = True
@@ -73,8 +80,16 @@ def default_ensemble_add_weights_function(lhs, rhs):
     from dafne_dl.interfaces import IncompatibleModelError
     if lhs.model_id != rhs.model_id: raise IncompatibleModelError
     lhs_weights = lhs.get_weights()
-    rhs_weights = torch_state_to(rhs.get_weights(), lhs.device)
-    new_weights = torch_apply_fn_to_state_2(lhs_weights, rhs_weights, torch.add)
+
+    rhs_weights_pre = rhs.get_weights()
+    rhs_weights=[]
+    for ii in range(len(rhs.model)):
+        rhs_weights_ = torch_state_to(rhs_weights_pre[ii], lhs.device)
+        rhs_weights.append(rhs_weights_)
+    new_weights=[]
+    for ii in range(len(rhs.model)):
+        new_weights_ = torch_apply_fn_to_state_2(lhs_weights[ii], rhs_weights[ii], torch.add)
+        new_weights.append(new_weights_)
     outputObj = lhs.get_empty_copy()
     outputObj.set_weights(new_weights)
     return outputObj
@@ -85,7 +100,10 @@ def default_ensemble_multiply_function(lhs, rhs: float):
     if not isinstance(rhs, (int, float)):
         raise NotImplementedError('Incompatible types for multiplication (only multiplication by numeric factor is allowed)')
     lhs_weights = lhs.get_weights()
-    new_weights = torch_apply_fn_to_state_1(lhs_weights, lambda x: x * rhs)
+    new_weights=[]
+    for ii in range(len(lhs.model)):
+        new_weights_ = torch_apply_fn_to_state_1(lhs_weights, lambda x: x * rhs)
+        new_weights.append(new_weights_)
     outputObj = lhs.get_empty_copy()
     outputObj.set_weights(new_weights)
     return outputObj
@@ -93,7 +111,11 @@ def default_ensemble_multiply_function(lhs, rhs: float):
 
 def default_ensemble_weight_copy_function(weights_in):
     from dafne_dl.misc import torch_apply_fn_to_state_1
-    return torch_apply_fn_to_state_1(weights_in, lambda x: x.clone())
+    weights_out = []
+    for ii in range(len(weights_in)):
+        weights_out_=torch_apply_fn_to_state_1(weights_in[ii], lambda x: x.clone())
+        weights_out.append(weights_out_)
+    return weights_out
 
 
 class DynamicEnsembleModel(DeepLearningClass):
