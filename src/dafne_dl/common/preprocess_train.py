@@ -486,11 +486,13 @@ def common_input_process_ensemble(inverse_label_dict, MODEL_RESOLUTION, training
             
             if label not in inverse_label_dict: continue
 
-            mask_= zoom(mask, zoomFactor)
+            # mask_= zoom(mask, zoomFactor)
+            mask_=mask
             mask_list.append(mask_)
 
             image = trainingData['image_list'][imageIndex]
-            image_ = zoom(image, zoomFactor)
+            # image_ = zoom(image, zoomFactor)
+            image_=image
             image_list.append(image_)
 
     return image_list, mask_list
