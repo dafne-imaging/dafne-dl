@@ -97,6 +97,7 @@ class DynamicTorchFLAREModel(DynamicTorchModel):
         self.model_id = model_id
         self.is_delta = is_delta
         self.data_dimensionality = data_dimensionality
+        self.type = "DynamicTorchFLAREModel"
 
         os.environ["CUDA_DEVICE_ORDER"] = "PCI_BUS_ID"
         device_str = "cuda" if torch.cuda.is_available() else "cpu"

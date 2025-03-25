@@ -27,6 +27,8 @@ def generic_load_model(file_descriptor_or_dict):
         from dafne_dl.DynamicDLModel import DynamicDLModel as ModelClass
     elif model_class == 'DynamicTorchModel':
         from dafne_dl.DynamicTorchModel import DynamicTorchModel as ModelClass
+    elif model_class == 'DynamicTorchFLAREModel':
+        from dafne_dl.DynamicTorchFLAREModel import DynamicTorchFLAREModel as ModelClass
     else:
         raise ValueError(f"Unknown model class: {model_class}")
     return load_model_from_class(input_dict, ModelClass)
