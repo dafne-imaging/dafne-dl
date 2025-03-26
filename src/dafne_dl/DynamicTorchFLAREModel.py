@@ -152,6 +152,6 @@ class DynamicTorchFLAREModel(DynamicTorchModel):
         """
         # Check if we have an incremental_learn_function attribute (where the learning function is stored)
         if hasattr(self, 'incremental_learn_function'):
-            self.incremental_learn_function(self, train_dataset, validation_dataset, options)
+            return self.incremental_learn_function(self, train_dataset, validation_dataset, options)
         else:
             raise NotImplementedError("This model does not have a learn function implemented.")
