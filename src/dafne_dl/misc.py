@@ -143,6 +143,8 @@ def torch_apply_fn_to_state_1(state1, fn):
     Applies a function to a states, and returns the result as a new state
     """
     new_state = OrderedDict()
+    print(f"DEBUG: type(state1) = {type(state1)}")
+    # print(f"DEBUG: state1 = {state1}")
     for key, value in state1.items():
         new_state[key] = fn(value)
     return new_state

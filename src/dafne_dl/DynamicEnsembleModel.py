@@ -31,7 +31,7 @@ import dill
 
 from .interfaces import DeepLearningClass
 from io import BytesIO
-from .misc import fn_to_source, torch_state_to
+from .misc import fn_to_source, torch_state_to, torch_apply_fn_to_state_1
 
 
 def default_ensemble_weights_to_model_function(modelObj, weights):
@@ -43,7 +43,8 @@ def default_ensemble_weights_to_model_function(modelObj, weights):
 def default_ensemble_model_to_weights_function(modelObj):
     from dafne_dl.misc import torch_apply_fn_to_state_1
     model_2_weights=[]
-    for ii in range(len(modelObj.model)):
+    # for ii in range(len(modelObj.model)):
+    for ii in range(0,5):
         model_2_weights_=torch_apply_fn_to_state_1(modelObj.model[ii].state_dict(), lambda x: x.clone())
         model_2_weights.append(model_2_weights_)
     return model_2_weights
@@ -95,14 +96,24 @@ def default_ensemble_add_weights_function(lhs, rhs):
     return outputObj
 
 
-def default_ensemble_multiply_function(lhs, rhs: float):
-    from dafne_dl.misc import torch_apply_fn_to_state_1
+def default_ensemble_multiply_function(lhs:DynamicEnsembleModel, rhs:float):
+    print('IMPORT')
+    # from dafne_dl.misc import torch_apply_fn_to_state_1
+    print('TEST')
     if not isinstance(rhs, (int, float)):
         raise NotImplementedError('Incompatible types for multiplication (only multiplication by numeric factor is allowed)')
-    lhs_weights = lhs.get_weights()
+    #lhs_weights = lhs.get_weights()
+    print('PESI')
+    lhs_weights = default_ensemble_model_to_weights_function(lhs)
+    print(f"Type of lhs_weights: {type(lhs_weights)}")
+    if isinstance(lhs_weights, list):
+        print(f"Length of lhs_weights: {len(lhs_weights)}")
+        if len(lhs_weights) > 0:
+            print(f"Type of first element: {type(lhs_weights[0])}")
+
     new_weights=[]
-    for ii in range(len(lhs.model)):
-        new_weights_ = torch_apply_fn_to_state_1(lhs_weights, lambda x: x * rhs)
+    for ii in range(0,5): #len(lhs.model)
+        new_weights_ = torch_apply_fn_to_state_1(lhs_weights[ii], lambda x: x * rhs)
         new_weights.append(new_weights_)
     outputObj = lhs.get_empty_copy()
     outputObj.set_weights(new_weights)
@@ -112,7 +123,7 @@ def default_ensemble_multiply_function(lhs, rhs: float):
 def default_ensemble_weight_copy_function(weights_in):
     from dafne_dl.misc import torch_apply_fn_to_state_1
     weights_out = []
-    for ii in range(len(weights_in)):
+    for ii in range(0,5): #len(weights_in)
         weights_out_=torch_apply_fn_to_state_1(weights_in[ii], lambda x: x.clone())
         weights_out.append(weights_out_)
     return weights_out
@@ -194,7 +205,8 @@ class DynamicEnsembleModel(DeepLearningClass):
 
         """
         self.model=[]
-        for ii in range(len(self.init_model_function())):
+        print('init_model')
+        for ii in range(0,5): # len(self.init_model_function())
             model_= self.init_model_function()[ii].to(self.device)
             self.model.append(model_)
         
@@ -212,9 +224,11 @@ class DynamicEnsembleModel(DeepLearningClass):
         None.
 
         """
+        print('set_weights')
         self.weights_to_model_function(self, weights)
         
     def get_weights(self):
+        print('get_weights')
         return self.model_to_weights_function(self)
         
     def apply_delta(self, other):
@@ -224,9 +238,11 @@ class DynamicEnsembleModel(DeepLearningClass):
         return self.calc_delta_function(self, other, threshold)
     
     def apply(self, data):
+        print('apply')
         return self.apply_model_function(self, data)
 
     def factor_multiply(self, factor: float):
+        print('factor_multiply')
         return self.factor_multiply_function(self, factor)
     
     def incremental_learn(self, trainingData, trainingOutputs, bs=1, minTrainImages=10):
@@ -258,9 +274,11 @@ class DynamicEnsembleModel(DeepLearningClass):
 
         # add the internal functions to the dictionary
         for fn_name in self.function_mappings:
+            print(f'fn name {fn_name}')
             outputDict[fn_name] = fn_to_source(getattr(self, fn_name))
 
         dill.dump(outputDict, file)
+        print(f'output dict {outputDict}')
     
     def dumps(self) -> bytes:
         file = BytesIO()
@@ -294,6 +312,7 @@ class DynamicEnsembleModel(DeepLearningClass):
             Output copy
 
         """
+        print('copy')
         model_out = self.get_empty_copy()
         model_out.set_weights( self.weight_copy_function(self.get_weights()) )
         return model_out
@@ -314,6 +333,7 @@ class DynamicEnsembleModel(DeepLearningClass):
             A new instance of a dynamic model
 
         """
+        print('load')
         from .model_loaders import load_model_from_class
         input_dict = dill.load(file)
         return load_model_from_class(input_dict, DynamicEnsembleModel)
@@ -334,5 +354,6 @@ class DynamicEnsembleModel(DeepLearningClass):
             A new instance of a dynamic model
 
         """
+        print('loads')
         file = BytesIO(b)
         return DynamicEnsembleModel.Load(file)
