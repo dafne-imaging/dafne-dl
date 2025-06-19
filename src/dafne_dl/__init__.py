@@ -37,5 +37,7 @@ if not flexidep.is_frozen():
     dm.install_auto()
 
 from .DynamicDLModel import DynamicDLModel
+from .DynamicEnsembleModel import DynamicEnsembleModel
+from .DynamicTorchModel import DynamicTorchModel
 from .LocalModelProvider import LocalModelProvider
 from .RemoteModelProvider import RemoteModelProvider
