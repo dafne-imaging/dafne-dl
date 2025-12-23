@@ -11,7 +11,14 @@ def load_model_from_class(input_dict, model_class):
     for k, v in input_dict.items():
         if '_function' in k:
             #print("Converting function", k)
-            input_dict[k] = source_to_fn(v, patches)  # convert the functions from source
+            #input_dict[k] = source_to_fn(v, patches)  # convert the functions from source
+            input_dict[k] = source_to_fn(
+                v, 
+                patches,
+                classes={
+                    model_class.__name__: model_class
+                }
+            )
 
     # print(inputDict)
     return model_class(**input_dict)
