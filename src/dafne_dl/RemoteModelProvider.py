@@ -189,7 +189,7 @@ class RemoteModelProvider(ModelProvider):
         if success:
             print('Model check OK')
             if model_name.find('aschoplex')>=0:
-                model = DynamicDLModel.Load(open(local_model_path, "rb"))
+                model = DynamicEnsembleModel.Load(open(local_model_path, "rb"))
             else:
                 model = DynamicDLModel.Load(open(local_model_path, "rb"))
 
