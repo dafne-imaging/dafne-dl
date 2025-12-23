@@ -96,6 +96,7 @@ def fn_to_source(function):
     Given a function, returns it source. If the source cannot be retrieved, return the object itself
     """
     #print('Converting fn to source')
+    # print("function: ", function)
     if function is None: return None
     try:
         return inspect.getsource(function)
@@ -111,14 +112,13 @@ def fn_to_source(function):
     return function # the source cannot be retrieved, return the object itself
 
 
-def source_to_fn(source, patches: dict = {}):
+def source_to_fn(source, patches = {},  classes={}):
     """
     Given a source, return the (first) defined function. If the source is not a string, return the object itself
     """
     #print('source to fn')
-    #print(source)
-    if type(source) is not str:
-        print("source to fn: source is not a string")
+    # print("source: ", source)
+    if not isinstance(source, str):
         return source
     #print("source to fn: source is string")
     for search, replace in patches.items():
@@ -126,10 +126,14 @@ def source_to_fn(source, patches: dict = {}):
 
     locs = {}
     globs = {}
+    
+    for name, cls in classes.items():
+        globs[name] = cls
+    
     try:
         exec(source, globs, locs)
     except Exception as e:
-        print("source to fn: exec failed", e)
+        # print("source to fn: exec failed", e)
         return source # the string was just a string apparently, not valid code
     for k,v in locs.items():
         if callable(v):
