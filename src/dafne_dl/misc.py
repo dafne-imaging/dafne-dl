@@ -20,8 +20,16 @@ import hashlib
 import inspect
 from collections import OrderedDict
 import re
+import torch
 
 import numpy as np
+
+def get_model_detail(model_detail_dict, classification, property, default=None):
+    try:
+        return model_detail_dict[classification.split(',')[0].strip()][property]
+    except KeyError:
+        return default
+
 
 
 def calculate_file_hash(file_path, cache_results=False, force_rewrite_cache=False):
@@ -64,12 +72,31 @@ def calc_dice_score(y_true, y_pred):
     denominator = np.sum(y_true) + np.sum(y_pred)  # works because all multiplied by 0 gets 0
     return (2 * intersect) / (denominator + 1e-6)
 
+def calc_dice_score_3D(y_true, y_pred):
+    """ 
+    Ignore background Dice calculation.
+    """
+    epsilon=1e-6
+
+    label = np.max(y_true)  # single label
+    if label == 0:
+        return -1.0  
+    
+    y_true_bin = (y_true == label).astype(np.float32)
+    y_pred_bin = (y_pred == label).astype(np.float32)
+
+    intersection = np.sum(y_true_bin * y_pred_bin)
+    sum_union = np.sum(y_true_bin) + np.sum(y_pred_bin)
+
+    return (2 * intersection) / (sum_union + epsilon)
+
 
 def fn_to_source(function):
     """
     Given a function, returns it source. If the source cannot be retrieved, return the object itself
     """
     #print('Converting fn to source')
+    # print("function: ", function)
     if function is None: return None
     try:
         return inspect.getsource(function)
@@ -85,14 +112,13 @@ def fn_to_source(function):
     return function # the source cannot be retrieved, return the object itself
 
 
-def source_to_fn(source, patches: dict = {}):
+def source_to_fn(source, patches = {},  classes={}):
     """
     Given a source, return the (first) defined function. If the source is not a string, return the object itself
     """
     #print('source to fn')
-    #print(source)
-    if type(source) is not str:
-        print("source to fn: source is not a string")
+    # print("source: ", source)
+    if not isinstance(source, str):
         return source
     #print("source to fn: source is string")
     for search, replace in patches.items():
@@ -100,10 +126,14 @@ def source_to_fn(source, patches: dict = {}):
 
     locs = {}
     globs = {}
+    
+    for name, cls in classes.items():
+        globs[name] = cls
+    
     try:
         exec(source, globs, locs)
     except Exception as e:
-        print("source to fn: exec failed", e)
+        # print("source to fn: exec failed", e)
         return source # the string was just a string apparently, not valid code
     for k,v in locs.items():
         if callable(v):

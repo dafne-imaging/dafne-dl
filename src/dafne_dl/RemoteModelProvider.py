@@ -23,6 +23,7 @@ import requests
 
 from .interfaces import ModelProvider
 from .DynamicDLModel import DynamicDLModel
+from .DynamicEnsembleModel import DynamicEnsembleModel
 from typing import IO, Callable, List, Union, Optional
 import threading
 import time
@@ -145,7 +146,10 @@ class RemoteModelProvider(ModelProvider):
             file_hash_local = calculate_file_hash(local_model_path)
             if file_hash_local == file_hash_remote:
                 print('Model exists, skipping download')
-                model = DynamicDLModel.Load(open(local_model_path, 'rb'))
+                if model_name.find('aschoplex')>=0:
+                    model = DynamicEnsembleModel.Load(open(local_model_path, 'rb'))
+                else:
+                    model = DynamicDLModel.Load(open(local_model_path, 'rb'))
                 return model
             else:
                 print('Local model is corrupt')
@@ -184,7 +188,10 @@ class RemoteModelProvider(ModelProvider):
 
         if success:
             print('Model check OK')
-            model = DynamicDLModel.Load(open(local_model_path, "rb"))
+            if model_name.find('aschoplex')>=0:
+                model = DynamicEnsembleModel.Load(open(local_model_path, "rb"))
+            else:
+                model = DynamicDLModel.Load(open(local_model_path, "rb"))
 
             if self.delete_old_models:
                 # Deleting older models
@@ -252,13 +259,13 @@ class RemoteModelProvider(ModelProvider):
                 raise PermissionError("Your api_key is invalid.")
             return None
 
-    def upload_model(self, model_name: str, model: DynamicDLModel, dice_score: float = 0.0):
+    def upload_model(self, model_name: str, model: DynamicDLModel | DynamicEnsembleModel, dice_score: float = 0.0):
         """
         Upload model to server
         
         Args:
             model_name: classifier | thigh | leg
-            model: DynamicDLModel
+            model: DynamicDLModel | DynamicEnsembleModel
         """
         print("Uploading model...")
         filename_out = os.path.join(self.temp_upload_dir, f'{model_name}_{model.timestamp_id}.model')

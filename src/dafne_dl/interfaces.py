@@ -25,6 +25,7 @@ from io import BytesIO
 from typing import IO, Callable, Union, Optional
 import numpy as np
 import time
+import torch
 
 
 class IncompatibleModelError(Exception):

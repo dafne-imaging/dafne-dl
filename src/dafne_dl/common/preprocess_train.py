@@ -473,6 +473,29 @@ def common_input_process_single(inverse_label_dict, MODEL_RESOLUTION, MODEL_SIZE
 
     return image_list, mask_list
 
+def common_input_process_ensemble(inverse_label_dict, MODEL_RESOLUTION, trainingData, trainingOutputs):
+
+    image_list = []
+    mask_list = []
+    resolution = np.array(trainingData['resolution'])
+    zoomFactor = resolution / MODEL_RESOLUTION
+
+    for imageIndex in range(len(trainingData['image_list'])):
+        
+        for label, mask in trainingOutputs[imageIndex].items():
+            
+            if label not in inverse_label_dict: continue
+
+            # mask_= zoom(mask, zoomFactor)
+            mask_=mask
+            mask_list.append(mask_)
+
+            image = trainingData['image_list'][imageIndex]
+            # image_ = zoom(image, zoomFactor)
+            image_=image
+            image_list.append(image_)
+
+    return image_list, mask_list
 
 def weighted_loss(y_true,y_pred):
     weight_matrix=K.flatten(y_pred[:,:,:,-1])

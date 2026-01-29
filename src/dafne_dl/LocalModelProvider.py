@@ -21,6 +21,7 @@ from pathlib import Path
 
 from .interfaces import ModelProvider
 from .DynamicDLModel import DynamicDLModel
+from .DynamicEnsembleModel import DynamicEnsembleModel
 from typing import Union, IO, List, Optional
 import os
 import datetime
@@ -42,7 +43,7 @@ class LocalModelProvider(ModelProvider):
 
     def load_model(self, model_name: str, progress_callback: Optional[Callable[[int, int], None]] = None,
                    force_download: bool = False,
-                   timestamp: Optional[Union[int,str]] = None) -> DynamicDLModel:
+                   timestamp: Optional[Union[int,str]] = None) -> DynamicDLModel | DynamicEnsembleModel:
         """
         Loads a deep learning model.
 
@@ -80,7 +81,11 @@ class LocalModelProvider(ModelProvider):
             raise FileNotFoundError("Could not find model file.")
 
         print('Opening', model_to_load)
-        return DynamicDLModel.Load(open(model_to_load, 'rb'))
+
+        if model_name.find('aschoplex')>=0:
+            return DynamicEnsembleModel.Load(open(model_to_load, 'rb'))
+        else:
+            return DynamicDLModel.Load(open(model_to_load, 'rb')) 
 
     def model_details(self, model_name: str) -> dict:
         # get model versions
@@ -98,20 +103,39 @@ class LocalModelProvider(ModelProvider):
             # add the content of the json file to the dictionary
             out_dict.update( json.load(open(self.models_path / json_file_name, 'rb')) )
         except:
+            out_dict['dimensionality']= '2'
             pass
 
         out_dict['timestamps'] = timestamps
 
         return out_dict
 
-    def import_model(self, file_path, model_name):
-        print('Importing model')
-        model = DynamicDLModel.Load(open(file_path, 'rb'))
-        self.upload_model(model_name, model)
+    def import_model(self, file_path, model_name: str):
+        if model_name.find('aschoplex')>=0:
+            model = DynamicEnsembleModel.Load(open(file_path, 'rb'))
+        else:
+            model = DynamicDLModel.Load(open(file_path, 'rb'))
+        self.upload_model(model_name, model)   
+        self.upload_json(file_path, model_name)
 
     def available_models(self) -> Union[None, List[str]]:
         return self.get_model_names()
+    
+    def upload_json(self, file_path, model_name: str):
+        json_file = f'{model_name}.json'
+        directory_path = os.path.dirname(file_path)
+        try:
+            print(f"Loading json file of the model: {model_name}")
+            with open(os.path.join(directory_path, json_file), 'r', encoding='utf-8') as f:
+               data = json.load(f)
 
+            with open(os.path.join(self.models_path, json_file), "w", encoding="utf-8") as f:
+                json.dump(data, f, indent=4, ensure_ascii=False)
+
+            print(f"Saving {json_file}")
+        except:
+            pass       
+        
     def upload_model(self, model_name: str, model: DynamicDLModel, dice_score: float = 0.0):
         print("You are using the LocalModelProvider. Model is saved in the model directory!")
         filename = f'{model_name}_{model.timestamp_id}.model'
