@@ -1,5 +1,9 @@
 import dill
+import importlib
 from .misc import source_to_fn
+import flexidep
+
+APP_STRING = 'network.dafne_dl.model_loaders'
 
 def load_model_from_class(input_dict, model_class):
     # code patches for on-the-fly conversion of old models to new format
@@ -24,20 +28,37 @@ def load_model_from_class(input_dict, model_class):
     return model_class(**input_dict)
 
 
-def generic_load_model(file_descriptor_or_dict):
+def generic_load_model(file_descriptor_or_dict, install_deps=True, app_string=APP_STRING, package_manager=flexidep.PackageManagers.pip):
     if isinstance(file_descriptor_or_dict, dict):
         input_dict = file_descriptor_or_dict
     else:
         input_dict = dill.load(file_descriptor_or_dict)
+    if install_deps:
+        ensure_dependencies(input_dict.get('dependencies', {}), app_string, package_manager)
     model_class = input_dict.get('type', 'DynamicDLModel')
-    if model_class == 'DynamicDLModel':
-        from dafne_dl.DynamicDLModel import DynamicDLModel as ModelClass
-    elif model_class == 'DynamicTorchModel':
-        from dafne_dl.DynamicTorchModel import DynamicTorchModel as ModelClass
-    elif model_class == 'DynamicEnsembleModel':
-        from dafne_dl.DynamicEnsembleModel import DynamicEnsembleModel as ModelClass
-    elif model_class == 'DynamicTorchFLAREModel':
-        from dafne_dl.DynamicTorchFLAREModel import DynamicTorchFLAREModel as ModelClass
-    else:
-        raise ValueError(f"Unknown model class: {model_class}")
+    module_name = f"dafne_dl.{model_class}"
+    try:
+        module = importlib.import_module(module_name)
+        ModelClass = getattr(module, model_class)
+    except ModuleNotFoundError as e:
+        raise ValueError(f"Unknown model module: {module_name}") from e
+    except AttributeError as e:
+        raise ValueError(f"Module '{module_name}' does not define class '{model_class}'") from e
     return load_model_from_class(input_dict, ModelClass)
+
+
+def ensure_dependencies(dependencies, app_string=APP_STRING, package_manager=flexidep.PackageManagers.pip):
+    dependency_manager = flexidep.DependencyManager(
+        config_file=None,
+        config_string=None,
+        unique_id=app_string,
+        interactive_initialization=False,
+        use_gui=False,
+        install_local=False,
+        package_manager=package_manager,
+        extra_command_line='',
+    )
+
+    for package, alternative_str in dependencies.items():
+        print("Processing package", package)
+        dependency_manager.process_single_package(package, alternative_str)

@@ -112,12 +112,14 @@ def fn_to_source(function):
     return function # the source cannot be retrieved, return the object itself
 
 
-def source_to_fn(source, patches = {},  classes={}):
+def source_to_fn(source, patches = None,  classes=None):
     """
     Given a source, return the (first) defined function. If the source is not a string, return the object itself
     """
     #print('source to fn')
     # print("source: ", source)
+    if patches is None: patches = {}
+    if classes is None: classes = {}
     if not isinstance(source, str):
         return source
     #print("source to fn: source is string")

@@ -21,7 +21,7 @@ from copy import copy
 from pathlib import Path
 import requests
 
-from .interfaces import ModelProvider
+from .interfaces import ModelProvider, DeepLearningClass
 from .DynamicDLModel import DynamicDLModel
 from .DynamicEnsembleModel import DynamicEnsembleModel
 from typing import IO, Callable, List, Union, Optional
@@ -29,6 +29,7 @@ import threading
 import time
 import datetime
 from .misc import calculate_file_hash
+from .model_loaders import generic_load_model
 
 UPLOAD_RETRIES = 3
 TIME_BETWEEN_RETRIES = 10
@@ -97,7 +98,7 @@ class RemoteModelProvider(ModelProvider):
 
     def load_model(self, model_name: str, progress_callback: Optional[Callable[[int, int], None]] = None,
                    force_download: bool = False,
-                   timestamp: Optional[Union[int,str]] = None) -> DynamicDLModel:
+                   timestamp: Optional[Union[int,str]] = None) -> DeepLearningClass:
         """
         Load latest model from remote server if it does not already exist locally.
 
@@ -146,10 +147,8 @@ class RemoteModelProvider(ModelProvider):
             file_hash_local = calculate_file_hash(local_model_path)
             if file_hash_local == file_hash_remote:
                 print('Model exists, skipping download')
-                if model_name.find('aschoplex')>=0:
-                    model = DynamicEnsembleModel.Load(open(local_model_path, 'rb'))
-                else:
-                    model = DynamicDLModel.Load(open(local_model_path, 'rb'))
+                model = generic_load_model(open(local_model_path, 'rb'))
+                model.metadata.update(json_content)  # make sure that the metadata in the object is the same as the JSON file
                 return model
             else:
                 print('Local model is corrupt')
@@ -188,10 +187,9 @@ class RemoteModelProvider(ModelProvider):
 
         if success:
             print('Model check OK')
-            if model_name.find('aschoplex')>=0:
-                model = DynamicEnsembleModel.Load(open(local_model_path, "rb"))
-            else:
-                model = DynamicDLModel.Load(open(local_model_path, "rb"))
+            model = generic_load_model(open(local_model_path, 'rb'))
+            model.metadata.update(json_content)  # make sure that the metadata in the object is the same as the JSON file
+            return model
 
             if self.delete_old_models:
                 # Deleting older models
@@ -259,7 +257,7 @@ class RemoteModelProvider(ModelProvider):
                 raise PermissionError("Your api_key is invalid.")
             return None
 
-    def upload_model(self, model_name: str, model: DynamicDLModel | DynamicEnsembleModel, dice_score: float = 0.0):
+    def upload_model(self, model_name: str, model: DeepLearningClass, dice_score: float = 0.0):
         """
         Upload model to server
         
