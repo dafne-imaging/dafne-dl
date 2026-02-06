@@ -117,6 +117,7 @@ class DynamicTorchModel(DeepLearningClass):
         self.model_id = model_id
         self.is_delta = is_delta
         self.data_dimensionality = data_dimensionality
+        self.type = 'DynamicTorchModel'
 
         os.environ["CUDA_DEVICE_ORDER"] = "PCI_BUS_ID"
         device_str = "cuda" if torch.cuda.is_available() else "cpu"
@@ -222,7 +223,7 @@ class DynamicTorchModel(DeepLearningClass):
             'timestamp_id': self.timestamp_id,
             'is_delta': self.is_delta,
             'data_dimensionality': self.get_data_dimensionality(),
-            'type': 'DynamicTorchModel',
+            'type': self.type,
             'metadata': self.metadata
             }
 

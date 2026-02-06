@@ -13,7 +13,7 @@ def load_model_from_class(input_dict, model_class):
             #print("Converting function", k)
             #input_dict[k] = source_to_fn(v, patches)  # convert the functions from source
             input_dict[k] = source_to_fn(
-                v, 
+                v,
                 patches,
                 classes={
                     model_class.__name__: model_class
@@ -36,6 +36,8 @@ def generic_load_model(file_descriptor_or_dict):
         from dafne_dl.DynamicTorchModel import DynamicTorchModel as ModelClass
     elif model_class == 'DynamicEnsembleModel':
         from dafne_dl.DynamicEnsembleModel import DynamicEnsembleModel as ModelClass
+    elif model_class == 'DynamicTorchFLAREModel':
+        from dafne_dl.DynamicTorchFLAREModel import DynamicTorchFLAREModel as ModelClass
     else:
         raise ValueError(f"Unknown model class: {model_class}")
     return load_model_from_class(input_dict, ModelClass)
