@@ -62,3 +62,39 @@ def ensure_dependencies(dependencies, app_string=APP_STRING, package_manager=fle
     for package, alternative_str in dependencies.items():
         print("Processing package", package)
         dependency_manager.process_single_package(package, alternative_str)
+
+
+def get_medicalvolume_orientation_from_metadata(metadata):
+    # check if the model has a specific orientation
+    model_orientation = metadata.get('orientation', None)
+
+    if isinstance(model_orientation, str):
+        # the orientation is a string (Axial/Transversal, Sagittal, Coronal)
+        model_orientation = model_orientation.lower()
+        if model_orientation.startswith('a') or model_orientation.startswith('t'):
+            model_orientation = ('LR', 'AP', 'SI')
+        elif model_orientation.startswith('s'):
+            model_orientation = ('AP', 'IS', 'LR')
+        elif model_orientation.startswith('c'):
+            model_orientation = ('LR', 'SI', 'AP')
+        else:
+            print("Unknown orientation")
+            model_orientation = None
+
+    return model_orientation
+
+def ensure_compatible_orientation(image, metadata, inplace=False):
+    original_orientation = image.orientation
+    model_orientation = get_medicalvolume_orientation_from_metadata(metadata)
+
+    if model_orientation is not None and model_orientation != original_orientation:
+        if inplace:
+            image.reformat(model_orientation, inplace=True)
+            return image
+        else:
+            return image.reformat(model_orientation, inplace=False)
+    else:
+        return image
+
+def ensure_compatible_orientation_inplace(image, metadata):
+    return ensure_compatible_orientation(image, metadata, inplace=True)
