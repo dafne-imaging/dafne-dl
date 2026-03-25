@@ -166,6 +166,19 @@ class DeepLearningClass(ABC):
         """
         pass
 
+    @abstractmethod
+    def can_incremental_learn(self) -> bool:
+        """
+        Returns whether the model can perform incremental learning
+
+        Returns
+        -------
+        bool
+            Whether the model can perform incremental learning
+
+        """
+        pass
+
     def __mul__(self, factor: float):
         if not isinstance(factor, (int, float)):
             raise NotImplementedError('Incompatible types for multiplication (only multiplication by numeric factor is allowed)')

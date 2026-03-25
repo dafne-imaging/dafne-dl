@@ -149,6 +149,9 @@ class DynamicTorchModel(DeepLearningClass):
 
         if weights: self.set_weights(weights)
 
+    def can_incremental_learn(self) -> bool:
+        return getattr(self, 'incremental_learn_function', None) is not None
+
     def set_internal_fn(self, internal_name, obj):
         #print('Setting', internal_name)
         if callable(obj):

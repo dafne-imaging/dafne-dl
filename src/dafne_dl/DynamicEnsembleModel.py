@@ -240,7 +240,10 @@ class DynamicEnsembleModel(DeepLearningClass):
     
     def incremental_learn(self, trainingData, trainingOutputs, bs=1, minTrainImages=10):
         self.incremental_learn_function(self, trainingData, trainingOutputs, bs, minTrainImages)
-        
+
+    def can_incremental_learn(self) -> bool:
+        return getattr(self, 'incremental_learn_function', None) is not None
+
     def dump(self, file):
         """
         Dumps the current status of the object, including functions and weights

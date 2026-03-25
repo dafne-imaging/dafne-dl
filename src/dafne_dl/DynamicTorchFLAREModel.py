@@ -132,7 +132,10 @@ class DynamicTorchFLAREModel(DynamicTorchModel):
             self.timestamp_id = timestamp_id  # unique timestamp id; used to identify model versions during federated learning
 
         if weights: self.set_weights(weights)
-            
+
+    def can_incremental_learn(self) -> bool:
+        return getattr(self, 'incremental_learn_function', None) is not None
+
     def learn(self, train_dataset, validation_dataset, options=None):
         """
         Train the model on the provided datasets.

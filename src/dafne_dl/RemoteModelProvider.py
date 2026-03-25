@@ -166,6 +166,8 @@ class RemoteModelProvider(ModelProvider):
         if r.ok:
             success = True
             total_size_in_bytes = int(r.headers.get('content-length', 0))
+            if total_size_in_bytes == 0:
+                total_size_in_bytes = int(json_content.get('latest_size', 0))
             print("Size to download:", total_size_in_bytes)
             block_size = 1024*1024  # 1 MB
             current_size = 0
@@ -180,7 +182,7 @@ class RemoteModelProvider(ModelProvider):
             print("Downloaded size", current_size)
             file_hash_local = calculate_file_hash(local_model_path)
 
-            if current_size != total_size_in_bytes or file_hash_local != file_hash_remote:
+            if file_hash_local != file_hash_remote:
                 print("Download failed!")
                 os.remove(local_model_path)
                 success = False
