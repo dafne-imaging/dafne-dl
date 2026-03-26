@@ -33,8 +33,12 @@ def generic_load_model(file_descriptor_or_dict, install_deps=True, app_string=AP
         input_dict = file_descriptor_or_dict
     else:
         input_dict = dill.load(file_descriptor_or_dict)
+    dependencies = input_dict.get('dependencies', {})
+    if not dependencies:
+        metadata = input_dict.get('metadata', {})
+        dependencies = metadata.get('dependencies', {})
     if install_deps:
-        ensure_dependencies(input_dict.get('dependencies', {}), app_string, package_manager)
+        ensure_dependencies(dependencies, app_string, package_manager)
     model_class = input_dict.get('type', 'DynamicDLModel')
     module_name = f"dafne_dl.{model_class}"
     try:
