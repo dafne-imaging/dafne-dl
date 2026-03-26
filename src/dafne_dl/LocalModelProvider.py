@@ -115,10 +115,8 @@ class LocalModelProvider(ModelProvider):
         return out_dict
 
     def import_model(self, file_path, model_name: str):
-        if model_name.find('aschoplex')>=0:
-            model = DynamicEnsembleModel.Load(open(file_path, 'rb'))
-        else:
-            model = DynamicDLModel.Load(open(file_path, 'rb'))
+        with open(file_path, 'rb') as f:
+            model = generic_load_model(f)
         self.upload_model(model_name, model)
         if model.metadata:
             self.upload_json(model.metadata, model_name)
@@ -129,10 +127,10 @@ class LocalModelProvider(ModelProvider):
         return self.get_model_names()
     
     def upload_json(self, file_path_or_dict, model_name: str):
+        json_file = f'{model_name}.json'
         if isinstance(file_path_or_dict, dict):
             data = file_path_or_dict
         else:
-            json_file = f'{model_name}.json'
             directory_path = os.path.dirname(file_path_or_dict)
             try:
                 print(f"Loading json file of the model: {model_name}")
