@@ -45,6 +45,7 @@ class DeepLearningClass(ABC):
             self.metadata = {}
 
     def get_metadata(self):
+        self.metadata['dimensionality'] = str(self.get_data_dimensionality())
         return self.metadata
 
     def set_metadata(self, metadata: Union[dict, io.IOBase, str]):
@@ -57,7 +58,7 @@ class DeepLearningClass(ABC):
             self.metadata = metadata
 
     def save_json_metadata(self, f, pretty=False):
-        json.dump(self.metadata, f, indent=4 if pretty else None)
+        json.dump(self.get_metadata(), f, indent=4 if pretty else None)
 
     @abstractmethod
     def init_model(self):
@@ -196,10 +197,7 @@ class DeepLearningClass(ABC):
         self.timestamp_id = int(time.time())
 
     def get_data_dimensionality(self):
-        try:
-            data_dimensionality = self.data_dimensionality
-        except AttributeError:
-            data_dimensionality = 2
+        data_dimensionality = getattr(self, 'data_dimensionality', 2)
         return data_dimensionality
 
 
