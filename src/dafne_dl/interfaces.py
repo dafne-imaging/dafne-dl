@@ -46,6 +46,8 @@ class DeepLearningClass(ABC):
 
     def get_metadata(self):
         self.metadata['dimensionality'] = str(self.get_data_dimensionality())
+        self.metadata['type'] = getattr(self, 'type', 'DynamicDLModel')
+        self.metadata['can_incremental_learn'] = self.can_incremental_learn()
         return self.metadata
 
     def set_metadata(self, metadata: Union[dict, io.IOBase, str]):
