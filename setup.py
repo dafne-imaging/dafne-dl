@@ -13,7 +13,8 @@ REQUIREMENTS = {
         'dill',
         'requests',
         'importlib_resources ; python_version < "3.10"',
-        'flexidep',
+        'flexidep >= 0.0.15',
+        'tensorflow',
         'torch'
     ],
     'main': [],

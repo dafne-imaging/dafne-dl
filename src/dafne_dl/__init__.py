@@ -15,7 +15,7 @@
 
 # -*- coding: utf-8 -*-
 
-VERSION='2.0-alpha3'
+VERSION='2.0-beta'
 __version__ = VERSION
 
 from . import resources
