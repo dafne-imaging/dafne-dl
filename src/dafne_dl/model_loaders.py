@@ -51,7 +51,7 @@ def generic_load_model(file_descriptor_or_dict, install_deps=True, app_string=AP
     return load_model_from_class(input_dict, ModelClass)
 
 
-def ensure_dependencies(dependencies, app_string=APP_STRING, package_manager=flexidep.PackageManagers.pip):
+def ensure_dependencies(dependencies, app_string=APP_STRING, package_manager=flexidep.PackageManagers.pip, force_reinstall=False):
     dependency_manager = flexidep.DependencyManager(
         config_file=None,
         config_string=None,
@@ -65,7 +65,7 @@ def ensure_dependencies(dependencies, app_string=APP_STRING, package_manager=fle
 
     for package, alternative_str in dependencies.items():
         print("Processing package", package)
-        dependency_manager.process_single_package(package, alternative_str)
+        dependency_manager.process_single_package(package, alternative_str, force_reinstall=force_reinstall)
 
 
 def get_medicalvolume_orientation_from_metadata(metadata):
