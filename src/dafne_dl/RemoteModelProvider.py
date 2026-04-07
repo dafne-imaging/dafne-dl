@@ -31,55 +31,87 @@ from .model_loaders import generic_load_model
 
 UPLOAD_RETRIES = 3
 TIME_BETWEEN_RETRIES = 10
+UPLOAD_CHUNK_SIZE = 10 * 1024 * 1024  # 10 MB per chunk
 
 
 def upload_model(url_base, filename, model_name, api_key, dice):
     print('Calculating hash...')
     file_hash = calculate_file_hash(filename)
     print(file_hash)
-    for retries in range(UPLOAD_RETRIES):
-        print(f"Sending {filename}")
-        with open(filename, 'rb') as f:
-            files = {'model_binary': f}
-            r = requests.post(url_base + "upload_model",
-                              files=files,
-                              data={"model_type": model_name,
-                                    "api_key": api_key,
-                                    "dice": dice,
-                                    "hash": file_hash})
-        print(f"status code: {r.status_code}")
-        try:
-            print(f"message: {r.json()['message']}")
-        except:
-            pass
 
-        if r.status_code == 200:
-            print("upload successful") # success
-            break
-        print('Upload error')
-        time.sleep(TIME_BETWEEN_RETRIES)
+    file_size = os.path.getsize(filename)
+    total_chunks = (file_size + UPLOAD_CHUNK_SIZE - 1) // UPLOAD_CHUNK_SIZE
+    upload_filename = os.path.basename(filename)
+
+    with open(filename, 'rb') as f:
+        for chunk_index in range(total_chunks):
+            chunk_data = f.read(UPLOAD_CHUNK_SIZE)
+            for retries in range(UPLOAD_RETRIES):
+                print(f"Sending {filename} chunk {chunk_index + 1}/{total_chunks}")
+                files = {'model_binary': (upload_filename, chunk_data)}
+                r = requests.post(url_base + "upload_model",
+                                  files=files,
+                                  data={"model_type": model_name,
+                                        "api_key": api_key,
+                                        "dice": dice,
+                                        "hash": file_hash,
+                                        "chunk_index": chunk_index,
+                                        "total_chunks": total_chunks,
+                                        "filename": upload_filename})
+                print(f"status code: {r.status_code}")
+                try:
+                    print(f"message: {r.json()['message']}")
+                except:
+                    pass
+
+                if r.status_code == 200:
+                    print(f"Chunk {chunk_index + 1}/{total_chunks} uploaded successfully")
+                    break
+                print('Upload error')
+                time.sleep(TIME_BETWEEN_RETRIES)
+            else:
+                print(f"Failed to upload chunk {chunk_index + 1}/{total_chunks} after {UPLOAD_RETRIES} retries")
+                os.remove(filename)
+                return
+
+    print("upload successful")
     os.remove(filename)
 
 
 def upload_data(url_base, filename, api_key):
-    for retries in range(UPLOAD_RETRIES):
-        print(f"Sending {filename}")
-        with open(filename, 'rb') as f:
-            files = {'data_binary': f}
-            r = requests.post(url_base + "upload_data",
-                              files=files,
-                              data={"api_key": api_key})
-        print(f"status code: {r.status_code}")
-        try:
-            print(f"message: {r.json()['message']}")
-        except:
-            pass
+    file_size = os.path.getsize(filename)
+    total_chunks = (file_size + UPLOAD_CHUNK_SIZE - 1) // UPLOAD_CHUNK_SIZE
+    upload_filename = os.path.basename(filename)
 
-        if r.status_code == 200:
-            print("upload successful") # success
-            break
-        print('Upload error')
-        time.sleep(TIME_BETWEEN_RETRIES)
+    with open(filename, 'rb') as f:
+        for chunk_index in range(total_chunks):
+            chunk_data = f.read(UPLOAD_CHUNK_SIZE)
+            for retries in range(UPLOAD_RETRIES):
+                print(f"Sending {filename} chunk {chunk_index + 1}/{total_chunks}")
+                files = {'data_binary': (upload_filename, chunk_data)}
+                r = requests.post(url_base + "upload_data",
+                                  files=files,
+                                  data={"api_key": api_key,
+                                        "chunk_index": chunk_index,
+                                        "total_chunks": total_chunks,
+                                        "filename": upload_filename})
+                print(f"status code: {r.status_code}")
+                try:
+                    print(f"message: {r.json()['message']}")
+                except:
+                    pass
+
+                if r.status_code == 200:
+                    print(f"Chunk {chunk_index + 1}/{total_chunks} uploaded successfully")
+                    break
+                print('Upload error')
+                time.sleep(TIME_BETWEEN_RETRIES)
+            else:
+                print(f"Failed to upload chunk {chunk_index + 1}/{total_chunks} after {UPLOAD_RETRIES} retries")
+                os.remove(filename)
+                return
+
+    print("upload successful")
     os.remove(filename)
 
 
