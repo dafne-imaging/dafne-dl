@@ -43,7 +43,7 @@ def get_package_name():
     """Determine package name based on git branch."""
     branch = get_current_branch()
 
-    if branch == 'main':
+    if branch == 'main' or branch == 'master':
         return BASE_PACKAGE_NAME
     else:
         return f'{BASE_PACKAGE_NAME}-{branch}'
