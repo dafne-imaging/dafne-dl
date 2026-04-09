@@ -31,7 +31,7 @@ from .model_loaders import generic_load_model
 
 UPLOAD_RETRIES = 3
 TIME_BETWEEN_RETRIES = 10
-UPLOAD_CHUNK_SIZE = 10 * 1024 * 1024  # 10 MB per chunk
+UPLOAD_CHUNK_SIZE = 50 * 1024 * 1024  # 10 MB per chunk
 
 
 def upload_model(url_base, filename, model_name, api_key, dice):
