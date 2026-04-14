@@ -125,6 +125,18 @@ class RemoteModelProvider(ModelProvider):
         self.delete_old_models = delete_old_models
         os.makedirs(self.models_path, exist_ok=True)
         print(f"Config: {self.url_base}, {self.api_key}")
+        self._resolve_redirect()
+
+    def _resolve_redirect(self):
+        route = "get_available_models"
+        try:
+            r = requests.get(self.url_base + route, allow_redirects=True)
+            final_url = r.url
+            if final_url != self.url_base + route and final_url.endswith(route):
+                self.url_base = final_url[:-len(route)]
+                print(f"URL redirected to: {self.url_base}")
+        except Exception:
+            pass
 
     def load_model(self, model_name: str, progress_callback: Optional[Callable[[int, int], None]] = None,
                    force_download: bool = False,
