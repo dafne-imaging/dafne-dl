@@ -1,5 +1,6 @@
 import dill
 import importlib
+import re
 from .misc import source_to_fn
 import flexidep
 
@@ -9,7 +10,15 @@ def load_model_from_class(input_dict, model_class):
     # code patches for on-the-fly conversion of old models to new format
     patches = {
         'from dl': 'from dafne_dl',
-        'import dl': 'import dafne_dl'
+        'import dl': 'import dafne_dl',
+        re.escape("""def make_up_layer(input_layer, down_layer, filters, kernel_size, strides, padding, n_conv_layers=2):
+        level_up = Conv2DTranspose(filters=filters, kernel_size=kernel_size, strides=strides, output_padding=(padding, padding), kernel_regularizer=regularizers.l2(reg))(input_layer)"""): \
+        """def make_up_layer(input_layer, down_layer, filters, kernel_size, strides, padding, n_conv_layers=2):
+        if padding <= 0:
+            output_padding = None
+        else:
+            output_padding = (padding, padding)
+        level_up = Conv2DTranspose(filters=filters, kernel_size=kernel_size, strides=strides, output_padding=output_padding, kernel_regularizer=regularizers.l2(reg))(input_layer)"""
     }
 
     for k, v in input_dict.items():
