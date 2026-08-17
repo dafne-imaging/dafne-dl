@@ -105,7 +105,7 @@ class LocalModelProvider(ModelProvider):
             # if no json file exists, try to get the metadata from the model file
             model_file = sorted(list(self.models_path.glob(f"{model_name}_*.model")))[-1]
             model = generic_load_model(open(model_file, 'rb'))
-            out_dict.update(model.metadata)
+            out_dict.update(model.get_metadata())
 
         if 'dimensionality' not in out_dict:
             out_dict['dimensionality']= '2'
@@ -118,8 +118,8 @@ class LocalModelProvider(ModelProvider):
         with open(file_path, 'rb') as f:
             model = generic_load_model(f)
         self.upload_model(model_name, model)
-        if model.metadata:
-            self.upload_json(model.metadata, model_name)
+        if model.get_metadata():
+            self.upload_json(model.get_metadata(), model_name)
         else:
             self.upload_json(file_path, model_name)
 
