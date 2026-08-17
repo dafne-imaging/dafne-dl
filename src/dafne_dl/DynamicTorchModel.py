@@ -45,6 +45,7 @@ def default_torch_model_to_weights_function(modelObj):
 
 
 def default_torch_delta_function(lhs, rhs, threshold=None):
+    from collections import OrderedDict
     from dafne_dl.interfaces import IncompatibleModelError
     from dafne_dl.misc import torch_state_to
     if lhs.model_id != rhs.model_id: raise IncompatibleModelError
@@ -64,6 +65,7 @@ def default_torch_delta_function(lhs, rhs, threshold=None):
 
 
 def default_torch_add_weights_function(lhs, rhs):
+    import torch
     from dafne_dl.misc import torch_apply_fn_to_state_2, torch_state_to
     from dafne_dl.interfaces import IncompatibleModelError
     if lhs.model_id != rhs.model_id: raise IncompatibleModelError
