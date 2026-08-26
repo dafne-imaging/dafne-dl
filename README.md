@@ -9,6 +9,8 @@ An instance of DeepLearningClass should be able to simply provide the expected r
  - Input: `{'image': 2D image, 'resolution': Sequence with pixel sizes}`
  - Output: for Classifiers: `str`, for Segmenters: `dict[str: image]` where str is the label and the image is a 2D numpy array containing the mask corresponding to the string.
 
+If the caller has more than one contrast/channel available for the same image (e.g. multiple MRI sequences of the same anatomy), it may pass them as additional `'image2'`, `'image3'`, ... keys alongside `'image'`, same spatial shape, in the input dict. This is optional -- a model that does not need extra contrasts can simply ignore these keys. `incremental_learn` (see below) receives the multi-contrast equivalent as `'image2_list'`, `'image3_list'`, ... alongside `'image_list'`. See `../dafne/docs/model_plugin_api.md` for the full key reference used by each model type.
+
 ### ModelProvider
 This is an abstract class that is intended to encapsulate the logic of model load/transfer. It will have two subclasses, LocalModelProvider and RemoteModelProvider. In both cases, the method load_model of this class accepts a description of the requested model and will return an instance of DeepLearningClass. In principle, LocalModelProvider will be used on the server, and RemoteModelProvider on the client.
 
@@ -25,6 +27,7 @@ Constructor:
                  apply_delta_function = default_keras_apply_delta_function, # apply a weight delta
                  incremental_learn_function = None, # function to perform an incremental learning step
                  weights = None): # initial weights
+`incremental_learn_function(modelObj, trainingData, trainingOutputs, bs, minTrainImages)` receives `trainingData` as a dict with `'image_list'` (list of images/volumes) plus, when multiple contrasts are available, `'image2_list'`, `'image3_list'`, ... in parallel with `'image_list'` (same length and order), mirroring the `'image'`/`'image2'`/... convention used for `apply_model_function`'s input dict.
 This allows the implementation of a very generic deep learning algorithm which includes the preprocessing steps in a way that can be serialized and defined at runtime, so if we want to change the model, we don't need to change the code of the client or server, as the implementation is self-contained within the model.
 The class provides the methods `dump(file_descriptor)` and `str = dumps()` to serialize and the static methods `Load(file_descriptor)` and `Loads(str)` to deserialize.
 Default functions for loading/setting keras weights and calculating deltas from keras models (which provide a get_weights(), set_weights() interface with lists of numpy arrays) are currently provided.
