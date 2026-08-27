@@ -40,7 +40,7 @@ class LocalModelProvider(ModelProvider):
         model_list = self.models_path.glob('*.model')
         model_names = list(set([os.path.basename(s).split('_')[0] for s in
                                 model_list]))  # get the name of the model, which is the part of the file before the '_'
-        model_names = list(filter(None, model_names))  # remove any empty names
+        model_names = sorted(list(filter(None, model_names)), key=str.lower)  # remove any empty names
         return model_names
 
     def load_model(self, model_name: str, progress_callback: Optional[Callable[[int, int], None]] = None,
